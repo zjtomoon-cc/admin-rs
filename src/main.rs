@@ -1,12 +1,28 @@
-use warp::Filter;
+use gotham::state::State;
 
-#[tokio::main]
-async fn main() {
-    // GET /hello/warp => 200 OK with body "Hello, warp!"
-    let hello = warp::path!("hello" / String)
-        .map(|name| format!("Hello, {}!", name));
+const HELLO_WORLD:&str = "Hello World!";
 
-    warp::serve(hello)
-        .run(([127, 0, 0, 1], 3030))
-        .await;
+fn say_hello(state:State) -> (State,&'static str) {
+    (state,HELLO_WORLD)
+}
+fn main() {
+    let addr = "127.0.0.1:7878";
+    println!("Listening for request at http://{}",addr);
+    gotham::start(addr, || Ok(say_hello))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use gotham::test::TestServer;
+    
+
+    #[test]
+    fn receive_hello_world_response() {
+        let test_server = TestServer::new(|| Ok(say_hello)).unwrap();
+        let response = test_server.client().get("http://localhost").perform().unwrap();
+
+        let body = response.read_body().unwrap();
+        assert_eq!(&body[..],b"Hello World!");
+    }
 }
