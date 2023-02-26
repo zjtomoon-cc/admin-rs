@@ -6,7 +6,7 @@ enum FileState {
 
 #[derive(Debug)]
 pub struct File {
-    name: String,
+    pub name: String,
     data:Vec<u8>,
     state:FileState,
 }
